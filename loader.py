@@ -43,7 +43,7 @@ class LoraLoaderTemp:
         elif "chrome" in input_string or "metallic" in input_string:
             lora_name = 'ChromeNoob_byKonan.safetensors'
             trigger_words = "CHROME, SHINY SKIN, CHROME CLOTHING, CHROME SKIN, "
-        elif "CARTOON" in input_string or "COMIC" in input_string:
+        elif "cartoon" in input_string or "comic" in input_string:
             lora_name = 'ANavarroCabreraXL_style-12.safetensors'
             trigger_words = "NAVARROCABRERAXL,"
         elif "marvel" in input_string:
