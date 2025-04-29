@@ -2,6 +2,7 @@ import folder_paths
 import comfy
 from .autonode import node_wrapper, get_node_names_mappings, validate
 
+
 fundamental_classes = []
 fundamental_node = node_wrapper(fundamental_classes)
 
