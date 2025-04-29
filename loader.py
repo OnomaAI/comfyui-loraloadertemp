@@ -75,7 +75,7 @@ class LoraLoaderTemp:
             lora_name = "spo-ep34.safetensors"
             trigger_words = " "
 
-        lora_path = folder_paths.get_lora_full_path_or_raise("loras", lora_name)
+        lora_path = folder_paths.get_full_path_or_raise("loras", lora_name)
         lora = None
         if self.loaded_lora is not None:
             if self.loaded_lora[0] == lora_path:
