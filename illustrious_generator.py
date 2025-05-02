@@ -12,6 +12,7 @@ from urllib3.exceptions import InsecureRequestWarning
 
 fundamental_classes = []
 fundamental_node = node_wrapper(fundamental_classes)
+MODELS = ["ILXL v1.0", "ILXL v1.1", "ILXL v2.0 Base", "ILXL v2.0 Refined", "ILXL v3.0 Creative+", "ILXL v3.0 Creative", "ILXL v3.0 Expressive+", "ILXL v3.0 Expressive", ]
 
 @fundamental_node
 class IllustriousGenerate:
@@ -19,6 +20,10 @@ class IllustriousGenerate:
     def INPUT_TYPES(cls):
         return {
             "required": {
+                "illustrious_api_key": ("STRING", {"multiline": False, "default": "illustrious_api_key"}),
+                "model_name": (MODELS,),
+                "width": ("INT", {"min": 256, "max": 2048, "default": 1024}),
+                "height": ("INT", {"min": 256, "max": 2048, "default": 1024}),
                 "prompt": ("STRING", {"multiline": True, "default": "1 girl"}),
                 "negative_prompt": (
                     "STRING",
@@ -32,36 +37,24 @@ class IllustriousGenerate:
                     },
                 ),
                 "steps": ("INT", {"min": 1, "max": 100, "default": 28}),
-                "width": ("INT", {"min": 256, "max": 2048, "default": 1024}),
-                "height": ("INT", {"min": 256, "max": 2048, "default": 1024}),
-                "cfg_scale": ("FLOAT", {"min": 1.0, "max": 20.0, "default": 7.4}),
+                "cfg": ("FLOAT", {"min": 1.0, "max": 20.0, "default": 7.4}),
                 "sampler": (["euler", "euler_a", "ddim", "dpmpp_2m"],),
                 "scheduler": (["normal", "klms", "sgm_uniform"],),
-                "model_id": ("INT", {"min": 1, "max": 20, "default": 5}),
                 "seed": ("INT", {"min": -1, "max": 2**32 - 1, "default": -1}),
                 "n_requests": ("INT", {"min": 1, "max": 32, "default": 10}),
                 "threads": ("INT", {"min": 1, "max": 32, "default": 10}),
-                "url": (
-                    "STRING",
-                    {
-                        "default": "https://api-dev.v1.illustrious-xl.ai/api/text-to-image/generate"
-                    },
-                ),
-                "access_token": ("STRING", {"multiline": False, "default": "my_access_token"}),
-                "illustrious_api_key": ("STRING", {"multiline": False, "default": "my key"}),
             }
         }
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("images",)
     FUNCTION = "generate"
-    custom_name = "illustrious-generate"
+    custom_name = "Generate 🎨🅘🅛🅛"
     CATEGORY = "Illustrious"
     @staticmethod
-    def _build_headers(access_token: str, api_key: str) -> dict:
+    def _build_headers(api_key: str) -> dict:
         return {
             "User-Agent": "MyCustomAgent/1.0",
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {access_token}",
             "Accept": "application/json, text/plain, */*",
             "sec-ch-ua": 'Chromium";v="134", "Not:A-Brand";v="24", "Google Chrome";v="134"',
             "sec-ch-ua-mobile": "?0",
@@ -86,35 +79,34 @@ class IllustriousGenerate:
         return IllustriousGenerate._pil_to_tensor(pil)
     def generate(
         self,
+        illustrious_api_key,
+        model_name,
+        width,
+        height,
         prompt,
         negative_prompt,
         steps,
-        width,
-        height,
-        cfg_scale,
+        cfg,
         sampler,
         scheduler,
-        model_id,
         seed,
         n_requests,
         threads,
-        url,
-        access_token,
-        illustrious_api_key,
+
     ):
         base_params = {
-            "modelId": model_id,
+            "modelId": MODELS.index(model_name)+1,
             "steps": steps,
             "width": width,
             "height": height,
             "prompt": prompt,
             "negativePrompt": negative_prompt,
-            "cfgScale": cfg_scale,
+            "cfgScale": cfg,
             "samplerName": sampler,
             "scheduler": scheduler,
         }
 
-        headers = self._build_headers(access_token, illustrious_api_key)
+        headers = self._build_headers(illustrious_api_key)
         warnings.simplefilter("ignore", InsecureRequestWarning)
 
         def _call(_) -> list[torch.Tensor]:
@@ -122,6 +114,7 @@ class IllustriousGenerate:
             p["seed"] = random.randint(0, 2**32 - 1) if seed == -1 else seed
 
             try:
+                url = "https://api-dev.v1.illustrious-xl.ai/api/text-to-image/generate"
                 r = requests.post(url, headers=headers, json=p, verify=False, timeout=120)
                 r.raise_for_status()
                 imgs64 = r.json().get("images", [])
